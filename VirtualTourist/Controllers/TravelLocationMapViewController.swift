@@ -23,9 +23,12 @@ class TravelLocationMapViewController: UIViewController, MKMapViewDelegate, UIGe
         let sortDescriptor = NSSortDescriptor(key: "latitude", ascending: false)
         fetchRequest.sortDescriptors = [sortDescriptor]
         
-        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "pins")
-        
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
+                                                              managedObjectContext: dataController.viewContext,
+                                                              sectionNameKeyPath: nil,
+                                                              cacheName: "pins")
         fetchedResultsController.delegate = self
+        
         do {
             try fetchedResultsController.performFetch()
         } catch {
@@ -39,6 +42,15 @@ class TravelLocationMapViewController: UIViewController, MKMapViewDelegate, UIGe
         addLongPressGesture()
         setupFetchedResultsController()
         loadPins()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        let mapRegion = MapRegion()
+        if mapRegion.hasMapRegion() {
+            mapView.region = mapRegion.region
+        }
     }
 
     // MARK: - Pin methods
@@ -68,6 +80,16 @@ class TravelLocationMapViewController: UIViewController, MKMapViewDelegate, UIGe
         let annotation = MKPointAnnotation()
         annotation.coordinate = coordinates
         self.mapView.addAnnotation(annotation)
+    }
+    
+    // MARK: - MKMapViewDelegate
+    
+    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        if let coordinate = view.annotation?.coordinate {
+            let photoAlbumVC = self.storyboard?.instantiateViewController(withIdentifier: "PhotoAlbum") as! PhotoAlbumViewController
+            photoAlbumVC.coordinate = coordinate
+            self.navigationController?.pushViewController(photoAlbumVC, animated: true)
+        }
     }
     
     // MARK: - Long Press Gesture
