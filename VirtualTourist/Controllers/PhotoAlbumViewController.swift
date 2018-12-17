@@ -78,14 +78,30 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoAlbumCollectionViewCell", for: indexPath) as! PhotoAlbumCollectionViewCell
-        cell.imageView.image = UIImage(named: "img-placeholder")
         
-        let pin = fetchedResultsController.fetchedObjects![indexPath.row]
-        if let data = pin.image {
+        let photo = fetchedResultsController.fetchedObjects![indexPath.row]
+        if let data = photo.data {
             cell.imageView.image = UIImage(data: data)
+        } else {
+            cell.imageView.image = UIImage(named: "img-placeholder")
+            downloadImage(imagePath: photo.url!) { imageData, errorString in
+                if let imageData = imageData {
+                    DispatchQueue.main.async {
+                        cell.imageView.image = UIImage(data: imageData)
+                    }
+                    photo.data = imageData
+                    try? self.dataController.viewContext.save()
+                }
+            }
         }
         
         return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let photo = fetchedResultsController.fetchedObjects![indexPath.row]
+        
+        print("item selected")
     }
     
     // MARK: - Collection Layout
@@ -114,13 +130,19 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     func loadPhotos() {
         let flickrClient = Flickr.sharedInstance()
         flickrClient.getPhotos(coordinate: CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)) { (success, photos, error) in
+            
+            if success == false {
+                print("unable to download images from Flick.")
+                return
+            }
+            
             print("flickr images fetched : \(photos.count)")
+            
             photos.forEach() { photo_url in
                 let photo = Photo(context: self.dataController.viewContext)
-                let url = URL(string: photo_url as! String)
-                let data = try? Data(contentsOf: url!)
-                photo.image = data
+                photo.url = URL(string: photo_url as! String)?.absoluteString
                 photo.pin = self.pin
+                
                 do {
                     try self.dataController.viewContext.save()
                     print("image saved")
@@ -130,6 +152,24 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             }
             
         }
+    }
+    
+    func downloadImage( imagePath:String, completionHandler: @escaping (_ imageData: Data?, _ errorString: String?) -> Void){
+        let session = URLSession.shared
+        let imgURL = NSURL(string: imagePath)
+        let request: NSURLRequest = NSURLRequest(url: imgURL! as URL)
+        
+        let task = session.dataTask(with: request as URLRequest) {data, response, downloadError in
+            
+            if downloadError != nil {
+                completionHandler(nil, "Could not download image \(imagePath)")
+            } else {
+                
+                completionHandler(data, nil)
+            }
+        }
+        
+        task.resume()
     }
 }
 

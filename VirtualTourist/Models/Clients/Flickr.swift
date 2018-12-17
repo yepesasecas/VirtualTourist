@@ -27,7 +27,7 @@ class Flickr: NSObject {
             "nojsoncallback": "1",
             "lat": "\(coordinate.latitude)",
             "lon": "\(coordinate.longitude)",
-            "api_key": "ceb80d2a2c3e898cefc084a838bd2d7e",
+            "api_key": "e1ebbe2cc1f9cb817d081fa14e88e0da",
             "method": "flickr.photos.search"
         ]
         let request = createURLRequest(method: "GET", path: "/services/rest", parameters: parameters)
@@ -37,6 +37,7 @@ class Flickr: NSObject {
         
         let task = session.dataTask(with: request) { data, response, error in
             guard error == nil else {
+                print("error returned: \(error.debugDescription)")
                 completionHandler(false, [], error.debugDescription)
                 return
             }
@@ -60,6 +61,7 @@ class Flickr: NSObject {
             guard let photos = parsedData?["photos"] as? AnyObject,
                 let photo = photos["photo"] as? [AnyObject]  else {
                     print("no photos attribute present")
+                    completionHandler(false, [], "no photos attribute present")
                     return
             }
             
