@@ -9,7 +9,7 @@
 import UIKit
 import MapKit
 
-class Flicker: NSObject {
+class Flickr: NSObject {
     
     // MARK: Properties
     var session = URLSession.shared
@@ -27,10 +27,11 @@ class Flicker: NSObject {
             "nojsoncallback": "1",
             "lat": "\(coordinate.latitude)",
             "lon": "\(coordinate.longitude)",
-            "api_key": "25e54eeffb99e1d3eadd65e75f4a1757",
+            "api_key": "ceb80d2a2c3e898cefc084a838bd2d7e",
             "method": "flickr.photos.search"
         ]
         let request = createURLRequest(method: "GET", path: "/services/rest", parameters: parameters)
+        print("Request: \(request.url!)")
         
         let session = URLSession.shared
         
@@ -92,9 +93,9 @@ class Flicker: NSObject {
     
     // MARK: - Shared Instance
     
-    class func sharedInstance() -> Flicker {
+    class func sharedInstance() -> Flickr {
         struct Singleton {
-            static var sharedInstance = Flicker()
+            static var sharedInstance = Flickr()
         }
         return Singleton.sharedInstance
     }

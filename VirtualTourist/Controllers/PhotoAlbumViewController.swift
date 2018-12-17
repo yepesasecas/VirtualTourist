@@ -8,6 +8,7 @@
 
 import UIKit
 import MapKit
+import CoreData
 
 class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
     
@@ -15,21 +16,54 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     
     @IBOutlet weak var collectionView: UICollectionView!
     
-    var coordinate:CLLocationCoordinate2D!
+    var pin:Pin!
     
-    var photos: [AnyObject?] = []
+    var dataController:DataController!
+    
+    var fetchedResultsController:NSFetchedResultsController<Photo>!
+    
+    fileprivate func setupFetchedResultsController() {
+        let fetchRequest:NSFetchRequest<Photo> = Photo.fetchRequest()
+        let predicate = NSPredicate(format: "pin == %@", pin)
+        fetchRequest.predicate = predicate
+        fetchRequest.sortDescriptors = []
+        
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "\(pin.debugDescription)-photos")
+        fetchedResultsController.delegate = self
+        
+        do {
+            try fetchedResultsController.performFetch()
+        } catch {
+            fatalError("The fetch could not be performed: \(error.localizedDescription)")
+        }
+    }
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         loadMap()
         setCollectionLayout()
-        loadPhotos()
+        setupFetchedResultsController()
+        
+        if fetchedResultsController.fetchedObjects!.count == 0 {
+            loadPhotos()
+        }
     }
     
     // MARK: - Actions
     
     @IBAction func newCollection(_ sender: Any) {
+        fetchedResultsController.fetchedObjects?.forEach() { photo in
+            dataController.viewContext.delete(photo)
+            do {
+                try dataController.viewContext.save()
+            } catch {
+                print("unable to delete photo. \(error.localizedDescription)")
+            }
+        }
+        self.collectionView.reloadData()
+        loadPhotos()
     }
     
     // MARK: - UICollectionViewDelegate
@@ -39,24 +73,17 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return photos.count
+        return fetchedResultsController.fetchedObjects!.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoAlbumCollectionViewCell", for: indexPath) as! PhotoAlbumCollectionViewCell
         cell.imageView.image = UIImage(named: "img-placeholder")
         
-        DispatchQueue.global().async {
-            let photo_url = self.photos[indexPath.row]
-            let url = URL(string: photo_url as! String)
-            let data = try? Data(contentsOf: url!)
-            
-            DispatchQueue.main.async {
-                cell.imageView.image = UIImage(data: data!)
-            }
+        let pin = fetchedResultsController.fetchedObjects![indexPath.row]
+        if let data = pin.image {
+            cell.imageView.image = UIImage(data: data)
         }
-        
-        
         
         return cell
     }
@@ -76,21 +103,68 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     // MARK: - loaders
     
     func loadMap() {
-        mapView.region.center = coordinate
+        mapView.region.center = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
         
         let annotation = MKPointAnnotation()
-        annotation.coordinate = coordinate
+        annotation.coordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
         
         mapView.addAnnotation(annotation)
     }
     
     func loadPhotos() {
-        let flickerClient = Flicker.sharedInstance()
-        flickerClient.getPhotos(coordinate: coordinate) { (success, photos, error) in
-            DispatchQueue.main.async {
-                self.photos = photos
-                self.collectionView.reloadData()
+        let flickrClient = Flickr.sharedInstance()
+        flickrClient.getPhotos(coordinate: CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)) { (success, photos, error) in
+            print("flickr images fetched : \(photos.count)")
+            photos.forEach() { photo_url in
+                let photo = Photo(context: self.dataController.viewContext)
+                let url = URL(string: photo_url as! String)
+                let data = try? Data(contentsOf: url!)
+                photo.image = data
+                photo.pin = self.pin
+                do {
+                    try self.dataController.viewContext.save()
+                    print("image saved")
+                } catch  {
+                    print(error.localizedDescription)
+                }
             }
+            
         }
     }
+}
+
+extension PhotoAlbumViewController:NSFetchedResultsControllerDelegate {
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+        switch type {
+        case .insert:
+            print("fetched objects count: \(fetchedResultsController.fetchedObjects!.count)")
+            self.collectionView?.insertItems(at: [newIndexPath!])
+            break
+            
+        case .delete:
+            self.collectionView?.deleteItems(at: [indexPath!])
+            break
+        
+        case .update:
+            self.collectionView?.reloadItems(at: [indexPath!])
+            break
+            
+        case .move:
+            break
+        }
+    }
+    
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange sectionInfo: NSFetchedResultsSectionInfo, atSectionIndex sectionIndex: Int, for type: NSFetchedResultsChangeType) {
+        print("PhotoAlbumViewController(127): TODO")
+    }
+    
+    
+    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        print("PhotoAlbumViewController(132): TODO")
+    }
+    
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        print("PhotoAlbumViewController(136): TODO")
+    }
+    
 }

@@ -7,9 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A01E286621C5F7F400687B22 /* Flicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01E286521C5F7F400687B22 /* Flicker.swift */; };
+		A01E286621C5F7F400687B22 /* Flickr.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01E286521C5F7F400687B22 /* Flickr.swift */; };
 		A01E286821C686CF00687B22 /* PhotoAlbumCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01E286721C686CF00687B22 /* PhotoAlbumCollectionViewCell.swift */; };
 		A01E286A21C6A84F00687B22 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A01E286921C6A84F00687B22 /* Assets.xcassets */; };
+		A01E286C21C6AC4100687B22 /* TravelLocationPointAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01E286B21C6AC4100687B22 /* TravelLocationPointAnnotation.swift */; };
 		A03B459421C0AF9E00372EE1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A03B459321C0AF9E00372EE1 /* AppDelegate.swift */; };
 		A03B459921C0AF9E00372EE1 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A03B459721C0AF9E00372EE1 /* Main.storyboard */; };
 		A03B459C21C0AF9E00372EE1 /* VirtualTourist.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = A03B459A21C0AF9E00372EE1 /* VirtualTourist.xcdatamodeld */; };
@@ -21,9 +22,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A01E286521C5F7F400687B22 /* Flicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Flicker.swift; sourceTree = "<group>"; };
+		A01E286521C5F7F400687B22 /* Flickr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Flickr.swift; sourceTree = "<group>"; };
 		A01E286721C686CF00687B22 /* PhotoAlbumCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PhotoAlbumCollectionViewCell.swift; path = VirtualTourist/Models/Clients/PhotoAlbumCollectionViewCell.swift; sourceTree = SOURCE_ROOT; };
 		A01E286921C6A84F00687B22 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = VirtualTourist/Assets.xcassets; sourceTree = SOURCE_ROOT; };
+		A01E286B21C6AC4100687B22 /* TravelLocationPointAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TravelLocationPointAnnotation.swift; path = VirtualTourist/TravelLocationPointAnnotation.swift; sourceTree = SOURCE_ROOT; };
 		A03B459021C0AF9E00372EE1 /* VirtualTourist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VirtualTourist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A03B459321C0AF9E00372EE1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A03B459821C0AF9E00372EE1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -50,7 +52,7 @@
 		A01E286421C5F7E600687B22 /* Clients */ = {
 			isa = PBXGroup;
 			children = (
-				A01E286521C5F7F400687B22 /* Flicker.swift */,
+				A01E286521C5F7F400687B22 /* Flickr.swift */,
 			);
 			path = Clients;
 			sourceTree = "<group>";
@@ -99,6 +101,7 @@
 			isa = PBXGroup;
 			children = (
 				A01E286721C686CF00687B22 /* PhotoAlbumCollectionViewCell.swift */,
+				A01E286B21C6AC4100687B22 /* TravelLocationPointAnnotation.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -198,7 +201,8 @@
 				A0407B4D21C4A3D1004C99D7 /* MapRegion.swift in Sources */,
 				A01E286821C686CF00687B22 /* PhotoAlbumCollectionViewCell.swift in Sources */,
 				A03B459421C0AF9E00372EE1 /* AppDelegate.swift in Sources */,
-				A01E286621C5F7F400687B22 /* Flicker.swift in Sources */,
+				A01E286C21C6AC4100687B22 /* TravelLocationPointAnnotation.swift in Sources */,
+				A01E286621C5F7F400687B22 /* Flickr.swift in Sources */,
 				A03B459C21C0AF9E00372EE1 /* VirtualTourist.xcdatamodeld in Sources */,
 				A0407B4F21C5E5E2004C99D7 /* PhotoAlbumViewController.swift in Sources */,
 			);

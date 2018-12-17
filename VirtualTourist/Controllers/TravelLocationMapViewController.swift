@@ -63,31 +63,27 @@ class TravelLocationMapViewController: UIViewController, MKMapViewDelegate, UIGe
         }
         
         pins.forEach() { pin in
-            addAnnotation(coordinates: CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude))
+            addAnnotation(pin: pin)
         }
     }
-    
-    func addPin(coordinates: CLLocationCoordinate2D) {
-        let pin = Pin(context: dataController.viewContext)
-        pin.latitude = coordinates.latitude
-        pin.longitude = coordinates.longitude
-        try? dataController.viewContext.save()
-    }
-    
+
     // MARK: - Map View
     
-    func addAnnotation(coordinates: CLLocationCoordinate2D) {
-        let annotation = MKPointAnnotation()
+    func addAnnotation(pin: Pin) {
+        let coordinates = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
+        let annotation = TravelLocationPointAnnotation()
         annotation.coordinate = coordinates
+        annotation.pin = pin
         self.mapView.addAnnotation(annotation)
     }
     
     // MARK: - MKMapViewDelegate
     
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        if let coordinate = view.annotation?.coordinate {
+        if  let annotation = view.annotation as? TravelLocationPointAnnotation {
             let photoAlbumVC = self.storyboard?.instantiateViewController(withIdentifier: "PhotoAlbum") as! PhotoAlbumViewController
-            photoAlbumVC.coordinate = coordinate
+            photoAlbumVC.pin = annotation.pin
+            photoAlbumVC.dataController = dataController
             self.navigationController?.pushViewController(photoAlbumVC, animated: true)
         }
     }
@@ -107,9 +103,13 @@ class TravelLocationMapViewController: UIViewController, MKMapViewDelegate, UIGe
         if sender.state == .began {
             let touchPoint = sender.location(in: mapView)
             let coordinates = mapView.convert(touchPoint, toCoordinateFrom: mapView)
-            addAnnotation(coordinates: coordinates)
-            addPin(coordinates: coordinates)
             
+            let pin = Pin(context: dataController.viewContext)
+            pin.latitude = coordinates.latitude
+            pin.longitude = coordinates.longitude
+            try? dataController.viewContext.save()
+            
+            addAnnotation(pin: pin)
         }
     }
 }
