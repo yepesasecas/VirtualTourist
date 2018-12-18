@@ -12,29 +12,14 @@ import CoreData
 
 class TravelLocationMapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognizerDelegate {
 
+    // MARK: Properties
+    
     @IBOutlet weak var mapView: MKMapView!
     
     var dataController:DataController!
-    
     var fetchedResultsController:NSFetchedResultsController<Pin>!
     
-    fileprivate func setupFetchedResultsController() {
-        let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
-        let sortDescriptor = NSSortDescriptor(key: "latitude", ascending: false)
-        fetchRequest.sortDescriptors = [sortDescriptor]
-        
-        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
-                                                              managedObjectContext: dataController.viewContext,
-                                                              sectionNameKeyPath: nil,
-                                                              cacheName: "pins")
-        fetchedResultsController.delegate = self
-        
-        do {
-            try fetchedResultsController.performFetch()
-        } catch {
-            fatalError("The fetch could not be performed: \(error.localizedDescription)")
-        }
-    }
+    // MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -52,51 +37,8 @@ class TravelLocationMapViewController: UIViewController, MKMapViewDelegate, UIGe
             mapView.region = mapRegion.region
         }
     }
-
-    // MARK: - Pin methods
     
-    func loadPins() {
-        
-        guard let pins = fetchedResultsController.fetchedObjects else {
-            print("no pins to load")
-            return
-        }
-        
-        pins.forEach() { pin in
-            addAnnotation(pin: pin)
-        }
-    }
-
-    // MARK: - Map View
-    
-    func addAnnotation(pin: Pin) {
-        let coordinates = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
-        let annotation = TravelLocationPointAnnotation()
-        annotation.coordinate = coordinates
-        annotation.pin = pin
-        self.mapView.addAnnotation(annotation)
-    }
-    
-    // MARK: - MKMapViewDelegate
-    
-    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        if  let annotation = view.annotation as? TravelLocationPointAnnotation {
-            let photoAlbumVC = self.storyboard?.instantiateViewController(withIdentifier: "PhotoAlbum") as! PhotoAlbumViewController
-            photoAlbumVC.pin = annotation.pin
-            photoAlbumVC.dataController = dataController
-            self.navigationController?.pushViewController(photoAlbumVC, animated: true)
-        }
-    }
-    
-    // MARK: - Long Press Gesture
-    
-    func addLongPressGesture() {
-        let lpgr = UILongPressGestureRecognizer(target: self, action: #selector(TravelLocationMapViewController.handleLongPress(_:)))
-        lpgr.delegate = self
-        lpgr.minimumPressDuration = 1
-        lpgr.delaysTouchesBegan = true
-        mapView.addGestureRecognizer(lpgr)
-    }
+    // MARK: - Actions
     
     @objc func handleLongPress(_ sender: UILongPressGestureRecognizer) {
         print(sender)
@@ -112,7 +54,70 @@ class TravelLocationMapViewController: UIViewController, MKMapViewDelegate, UIGe
             addAnnotation(pin: pin)
         }
     }
+    
+    // MARK: - MKMapViewDelegate
+    
+    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        if  let annotation = view.annotation as? TravelLocationPointAnnotation {
+            let photoAlbumVC = self.storyboard?.instantiateViewController(withIdentifier: "PhotoAlbum") as! PhotoAlbumViewController
+            photoAlbumVC.pin = annotation.pin
+            photoAlbumVC.dataController = dataController
+            self.navigationController?.pushViewController(photoAlbumVC, animated: true)
+        }
+    }
+    
+
+    // MARK: - Private
+    
+    func loadPins() {
+        
+        guard let pins = fetchedResultsController.fetchedObjects else {
+            print("no pins to load")
+            return
+        }
+        
+        pins.forEach() { pin in
+            addAnnotation(pin: pin)
+        }
+    }
+
+    func setupFetchedResultsController() {
+        let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
+        let sortDescriptor = NSSortDescriptor(key: "latitude", ascending: false)
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
+                                                              managedObjectContext: dataController.viewContext,
+                                                              sectionNameKeyPath: nil,
+                                                              cacheName: "pins")
+        fetchedResultsController.delegate = self
+        
+        do {
+            try fetchedResultsController.performFetch()
+        } catch {
+            fatalError("The fetch could not be performed: \(error.localizedDescription)")
+        }
+    }
+    
+    func addAnnotation(pin: Pin) {
+        let coordinates = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
+        let annotation = TravelLocationPointAnnotation()
+        annotation.coordinate = coordinates
+        annotation.pin = pin
+        self.mapView.addAnnotation(annotation)
+    }
+    
+    func addLongPressGesture() {
+        let lpgr = UILongPressGestureRecognizer(target: self, action: #selector(TravelLocationMapViewController.handleLongPress(_:)))
+        lpgr.delegate = self
+        lpgr.minimumPressDuration = 1
+        lpgr.delaysTouchesBegan = true
+        mapView.addGestureRecognizer(lpgr)
+    }
+    
 }
+
+// MARK: - Extension
 
 extension TravelLocationMapViewController:NSFetchedResultsControllerDelegate {
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {

@@ -23,22 +23,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     var fetchedResultsController:NSFetchedResultsController<Photo>!
     var selectedCells: [IndexPath]! = []
     
-    fileprivate func setupFetchedResultsController() {
-        let fetchRequest:NSFetchRequest<Photo> = Photo.fetchRequest()
-        let predicate = NSPredicate(format: "pin == %@", pin)
-        fetchRequest.predicate = predicate
-        fetchRequest.sortDescriptors = []
-        
-        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "\(pin.objectID)-photos")
-        fetchedResultsController.delegate = self
-        
-        do {
-            try fetchedResultsController.performFetch()
-        } catch {
-            fatalError("The fetch could not be performed: \(error.localizedDescription)")
-        }
-    }
-    
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
@@ -165,6 +149,22 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
                 }
             }
             
+        }
+    }
+    
+    func setupFetchedResultsController() {
+        let fetchRequest:NSFetchRequest<Photo> = Photo.fetchRequest()
+        let predicate = NSPredicate(format: "pin == %@", pin)
+        fetchRequest.predicate = predicate
+        fetchRequest.sortDescriptors = []
+        
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "\(pin.objectID)-photos")
+        fetchedResultsController.delegate = self
+        
+        do {
+            try fetchedResultsController.performFetch()
+        } catch {
+            fatalError("The fetch could not be performed: \(error.localizedDescription)")
         }
     }
     
