@@ -124,6 +124,7 @@
                         <viewLayoutGuide key="safeArea" id="mfQ-WS-UFX"/>
                     </view>
                     <connections>
+                        <outlet property="actionBtn" destination="hig-GB-lev" id="1ze-0K-EPu"/>
                         <outlet property="collectionView" destination="at4-Mk-NpQ" id="uhd-3E-gtT"/>
                         <outlet property="mapView" destination="fzd-jG-hWx" id="2tT-Ls-D0j"/>
                     </connections>

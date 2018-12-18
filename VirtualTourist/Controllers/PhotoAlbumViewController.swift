@@ -12,15 +12,16 @@ import CoreData
 
 class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
     
-    @IBOutlet weak var mapView: MKMapView!
+    // MARK: - Properties
     
+    @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet weak var actionBtn: UIBarButtonItem!
     
     var pin:Pin!
-    
     var dataController:DataController!
-    
     var fetchedResultsController:NSFetchedResultsController<Photo>!
+    var selectedCells: [IndexPath]! = []
     
     fileprivate func setupFetchedResultsController() {
         let fetchRequest:NSFetchRequest<Photo> = Photo.fetchRequest()
@@ -28,7 +29,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         fetchRequest.predicate = predicate
         fetchRequest.sortDescriptors = []
         
-        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "\(pin.debugDescription)-photos")
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "\(pin.objectID)-photos")
         fetchedResultsController.delegate = self
         
         do {
@@ -38,6 +39,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         }
     }
     
+    // MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -54,16 +56,20 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     // MARK: - Actions
     
     @IBAction func newCollection(_ sender: Any) {
-        fetchedResultsController.fetchedObjects?.forEach() { photo in
-            dataController.viewContext.delete(photo)
-            do {
-                try dataController.viewContext.save()
-            } catch {
-                print("unable to delete photo. \(error.localizedDescription)")
+        if hasSelectedCells() {
+            deleteSelectedCells()
+        } else {
+            fetchedResultsController.fetchedObjects?.forEach() { photo in
+                dataController.viewContext.delete(photo)
+                do {
+                    try dataController.viewContext.save()
+                } catch {
+                    print("unable to delete photo. \(error.localizedDescription)")
+                }
             }
+            self.collectionView.reloadData()
+            loadPhotos()
         }
-        self.collectionView.reloadData()
-        loadPhotos()
     }
     
     // MARK: - UICollectionViewDelegate
@@ -79,7 +85,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoAlbumCollectionViewCell", for: indexPath) as! PhotoAlbumCollectionViewCell
         
-        let photo = fetchedResultsController.fetchedObjects![indexPath.row]
+        let photo = fetchedResultsController.object(at: indexPath)
         if let data = photo.data {
             cell.imageView.image = UIImage(data: data)
         } else {
@@ -99,12 +105,20 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let photo = fetchedResultsController.fetchedObjects![indexPath.row]
-        
-        print("item selected")
+        if selectedCells.contains(indexPath) == false {
+            selectedCells.append(indexPath)
+        }
+        btnAction()
     }
     
-    // MARK: - Collection Layout
+    func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
+        if let index = selectedCells.firstIndex(of: indexPath) {
+            selectedCells.remove(at: index)
+        }
+        btnAction()
+    }
+    
+    // MARK: - Private
     
     func setCollectionLayout() {
         let space:CGFloat = 3.0
@@ -114,9 +128,9 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         layout.minimumLineSpacing = space
         layout.itemSize = CGSize(width: dimension, height: dimension)
         collectionView.setCollectionViewLayout(layout, animated: true)
+        
+        collectionView.allowsMultipleSelection = true
     }
-    
-    // MARK: - loaders
     
     func loadMap() {
         mapView.region.center = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
@@ -171,13 +185,38 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         
         task.resume()
     }
+    
+    func hasSelectedCells() -> Bool {
+        if selectedCells.count == 0 {
+            return false
+        }
+        return true
+    }
+    
+    func btnAction() {
+        if hasSelectedCells() {
+            actionBtn.title = "Delete selected items"
+        }
+        else {
+            actionBtn.title = "New Collection"
+        }
+    }
+    
+    func deleteSelectedCells() {
+        let photos = selectedCells.map() { fetchedResultsController.object(at: $0) }
+        photos.forEach() { photo in
+            dataController.viewContext.delete(photo)
+            try? dataController.viewContext.save()
+        }
+    }
 }
+
+// MARK: - Extensions
 
 extension PhotoAlbumViewController:NSFetchedResultsControllerDelegate {
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
         switch type {
         case .insert:
-            print("fetched objects count: \(fetchedResultsController.fetchedObjects!.count)")
             self.collectionView?.insertItems(at: [newIndexPath!])
             break
             
